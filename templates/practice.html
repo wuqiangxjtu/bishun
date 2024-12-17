@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>练习 - {{ current_char }}</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #target {
+            width: 400px;
+            height: 400px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .navigation {
+            margin: 20px 0;
+        }
+        .back-to-home {
+            display: inline-block;
+            margin-top: 20px;
+            color: #666;
+            text-decoration: none;
+        }
+        .back-to-home:hover {
+            color: #333;
+        }
+        .result-lists {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .result-list {
+            flex: 1;
+            margin: 0 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result-list h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .correct-list {
+            border-color: #4CAF50;
+        }
+        .correct-list h3 {
+            color: #4CAF50;
+        }
+        .incorrect-list {
+            border-color: #f44336;
+        }
+        .incorrect-list h3 {
+            color: #f44336;
+        }
+        .char-result {
+            display: inline-block;
+            margin: 2px;
+            padding: 2px 5px;
+        }
+        .clear-results {
+            margin: 10px 0;
+            padding: 8px 16px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .clear-results:hover {
+            background-color: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <h1>汉字笔顺练习：{{ current_char }}</h1>
+    
+    <div id="target"></div>
+    
+    <div class="controls">
+        <button onclick="writer.quiz()">开始练习</button>
+        <button onclick="writer.showCharacter()">显示汉字</button>
+        <button onclick="writer.hideCharacter()">隐藏汉字</button>
+        <button onclick="writer.animateCharacter()">动画演示</button>
+    </div>
+
+    <div class="result-lists">
+        <div class="result-list correct-list">
+            <h3>正确</h3>
+            <div id="correctList"></div>
+        </div>
+        <div class="result-list incorrect-list">
+            <h3>错误</h3>
+            <div id="incorrectList"></div>
+        </div>
+    </div>
+
+    <button class="clear-results" onclick="clearResults()">清除测试结果</button>
+
+    <div class="navigation">
+        {% if prev_chars %}
+            <a href="{{ url_for('practice', char=chars|join(''), index=current_index-1) }}">上一个</a>
+        {% endif %}
+        
+        <span>{{ current_index + 1 }} / {{ chars|length }}</span>
+        
+        {% if next_chars %}
+            <a href="{{ url_for('practice', char=chars|join(''), index=current_index+1) }}">下一个</a>
+        {% endif %}
+    </div>
+
+    <a href="{{ url_for('index') }}" class="back-to-home">返回首页</a>
+
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.0/dist/hanzi-writer.min.js"></script>
+    <script>
+        const writer = HanziWriter.create('target', '{{ current_char }}', {
+            width: 400,
+            height: 400,
+            padding: 5,
+            showOutline: true,
+            strokeAnimationSpeed: 1,
+            delayBetweenStrokes: 1000
+        });
+
+        function saveResult(char, isCorrect) {
+            const key = isCorrect ? 'correctChars' : 'incorrectChars';
+            const oppositeKey = isCorrect ? 'incorrectChars' : 'correctChars';
+            let chars = JSON.parse(localStorage.getItem(key) || '[]');
+            let oppositeChars = JSON.parse(localStorage.getItem(oppositeKey) || '[]');
+
+            // 如果字符在相反的列表中，则删除它
+            const oppositeIndex = oppositeChars.indexOf(char);
+            if (oppositeIndex !== -1) {
+                oppositeChars.splice(oppositeIndex, 1);
+                localStorage.setItem(oppositeKey, JSON.stringify(oppositeChars));
+                updateResultList(isCorrect ? 'incorrectList' : 'correctList', oppositeChars);
+            }
+
+            // 添加到当前列表（如果还不在列表中）
+            if (!chars.includes(char)) {
+                chars.push(char);
+                localStorage.setItem(key, JSON.stringify(chars));
+                updateResultList(isCorrect ? 'correctList' : 'incorrectList', chars);
+            }
+        }
+
+        function updateResultList(listId, chars) {
+            const list = document.getElementById(listId);
+            list.innerHTML = chars.map(char => 
+                `<span class="char-result">${char}</span>`
+            ).join('');
+        }
+
+        updateResultList('correctList', JSON.parse(localStorage.getItem('correctChars') || '[]'));
+        updateResultList('incorrectList', JSON.parse(localStorage.getItem('incorrectChars') || '[]'));
+
+        writer.quiz({
+            onComplete: (summaryData) => {
+                if (summaryData.totalMistakes === 0) {
+                    saveResult('{{ current_char }}', true);
+                } else {
+                    saveResult('{{ current_char }}', false);
+                }
+            }
+        });
+
+        function clearResults() {
+            // 清除本地存储
+            localStorage.removeItem('correctChars');
+            localStorage.removeItem('incorrectChars');
+            
+            // 清空显示的列表
+            updateResultList('correctList', []);
+            updateResultList('incorrectList', []);
+        }
+    </script>
+</body>
+</html> 

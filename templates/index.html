@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>汉字笔顺练习 - 首页</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        .grade-selector {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .grade-radio {
+            display: none;
+        }
+        .grade-label {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            background: white;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+        .grade-radio:checked + .grade-label {
+            color: #4CAF50;
+            border-color: #4CAF50;
+            font-weight: bold;
+        }
+        .add-form {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+        .char-input {
+            font-size: 18px;
+            padding: 5px;
+            width: 200px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .input-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            display: block;
+        }
+        .input-hint .example {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .submit-btn {
+            padding: 5px 15px;
+            font-size: 16px;
+            margin-top: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .grade-content {
+            display: none;
+        }
+        .grade-content.active {
+            display: block !important;
+        }
+        .char-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+        .char-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+        .char-link {
+            font-size: 24px;
+            text-decoration: none;
+            color: #333;
+            display: block;
+            padding: 5px;
+            transition: background-color 0.3s;
+        }
+        .char-link:hover {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            color: red;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .message {
+            text-align: center;
+            color: #666;
+            margin: 10px 0;
+            display: none;
+        }
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            background: #fff;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 2px dashed #ddd;
+        }
+        .char-list-container {
+            margin: 20px 0;
+            width: 100%;
+            background-color: #f8f8f8;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .practice-all-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .practice-all-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>汉字笔顺练习</h1>
+        <div class="grade-selector">
+            <div>
+                <input type="radio" id="grade4" name="grade" value="grade4" class="grade-radio" onchange="switchGrade(this.value)">
+                <label for="grade4" class="grade-label">四年级</label>
+            </div>
+            <div>
+                <input type="radio" id="grade5" name="grade" value="grade5" class="grade-radio" onchange="switchGrade(this.value)">
+                <label for="grade5" class="grade-label">五年级</label>
+            </div>
+            <div>
+                <input type="radio" id="grade6" name="grade" value="grade6" class="grade-radio" checked onchange="switchGrade(this.value)">
+                <label for="grade6" class="grade-label">六年级</label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="add-form">
+        <form id="addCharForm">
+            <div class="input-container">
+                <input type="text" name="char" class="char-input" placeholder="请输入汉字（单个汉字或用逗号分隔）" required>
+                <span class="input-hint">格式：单个汉字（如：<span class="example">字</span>）或逗号分隔的汉字（如：<span class="example">大,小,多</span>）</span>
+            </div>
+            <button type="submit" class="submit-btn">添加汉字</button>
+        </form>
+        <div id="message" class="message"></div>
+    </div>
+    <div id="grade4" class="grade-content">
+        <button onclick="practiceAll('grade4')" class="practice-all-btn">
+            全部练习
+        </button>
+        <div class="char-list-container">
+            <div id="charListGrade4" class="char-list">
+                {% if grade4_chars %}
+                    {% for char in grade4_chars %}
+                    <div class="char-item" data-char="{{ char }}" data-grade="grade4">
+                        <a href="#" class="delete-btn" onclick="deleteChar('{{ char }}', 'grade4', event)">×</a>
+                        <a href="{{ url_for('practice', char=char) }}" class="char-link">{{ char }}</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">目前没有需要学习的字，请添加</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div id="grade5" class="grade-content">
+        <button onclick="practiceAll('grade5')" class="practice-all-btn">
+            全部练习
+        </button>
+        <div class="char-list-container">
+            <div id="charListGrade5" class="char-list">
+                {% if grade5_chars %}
+                    {% for char in grade5_chars %}
+                    <div class="char-item" data-char="{{ char }}" data-grade="grade5">
+                        <a href="#" class="delete-btn" onclick="deleteChar('{{ char }}', 'grade5', event)">×</a>
+                        <a href="{{ url_for('practice', char=char) }}" class="char-link">{{ char }}</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">目前没有需要学习的字，请添加</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div id="grade6" class="grade-content active">
+        <button onclick="practiceAll('grade6')" class="practice-all-btn">
+            全部练习
+        </button>
+        <div class="char-list-container">
+            <div id="charListGrade6" class="char-list">
+                {% if grade6_chars %}
+                    {% for char in grade6_chars %}
+                    <div class="char-item" data-char="{{ char }}" data-grade="grade6">
+                        <a href="#" class="delete-btn" onclick="deleteChar('{{ char }}', 'grade6', event)">×</a>
+                        <a href="{{ url_for('practice', char=char) }}" class="char-link">{{ char }}</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">目前没有需要学习的字，请添加</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从后端获取的汉字列表数据
+        const grade4Chars = {{ grade4_chars|tojson|safe }};
+        const grade5Chars = {{ grade5_chars|tojson|safe }};
+        const grade6Chars = {{ grade6_chars|tojson|safe }};
+
+        function showMessage(text, isError = false) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.style.color = isError ? '#ff0000' : '#4CAF50';
+            message.style.display = 'block';
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 2000);
+        }
+
+        function switchGrade(grade) {
+            console.log('Switching to grade:', grade);
+            
+            document.querySelectorAll('.grade-content').forEach(content => {
+                console.log('Removing active from:', content.id);
+                content.classList.remove('active');
+            });
+            
+            const selectedContent = document.querySelector(`#${grade}.grade-content`);
+            console.log('Selected content:', selectedContent);
+            
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+                console.log('Added active class to:', grade);
+                
+                // 更新"全部练习"按钮的显示状态
+                const gradeChars = {
+                    'grade4': grade4Chars,
+                    'grade5': grade5Chars,
+                    'grade6': grade6Chars
+                }[grade];
+                
+                const practiceBtn = selectedContent.querySelector('.practice-all-btn');
+                if (practiceBtn) {
+                    practiceBtn.style.display = gradeChars && gradeChars.length > 0 ? 'block' : 'none';
+                }
+            }
+        }
+
+        function createCharElement(char, grade) {
+            const div = document.createElement('div');
+            div.className = 'char-item';
+            div.setAttribute('data-char', char);
+            div.setAttribute('data-grade', grade);
+            div.innerHTML = `
+                <a href="#" class="delete-btn" onclick="deleteChar('${char}', '${grade}', event)">×</a>
+                <a href="/practice/${char}" class="char-link">${char}</a>
+            `;
+            return div;
+        }
+
+        function getCurrentGrade() {
+            return document.querySelector('input[name="grade"]:checked').value;
+        }
+
+        function practiceAll(grade) {
+            const gradeMap = {
+                'grade4': grade4Chars,
+                'grade5': grade5Chars,
+                'grade6': grade6Chars
+            };
+            const chars = gradeMap[grade];
+            if (chars && chars.length > 0) {
+                location.href = `/practice/?char=${chars.join('')}`;
+            }
+        }
+
+        document.getElementById('addCharForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const input = this.querySelector('input[name="char"]');
+            const inputValue = input.value.trim();
+            const grade = getCurrentGrade();
+
+            // 验证输入格式
+            const chars = inputValue.includes(',') ? 
+                inputValue.split(',').map(c => c.trim()).filter(c => c) : 
+                [inputValue];
+            
+            // 验证是否都是汉字
+            if (!chars.every(char => /^[\u4e00-\u9fa5]$/.test(char))) {
+                showMessage('请输入有效的汉字！', true);
+                return;
+            }
+
+            // 逐个添加汉字
+            let successCount = 0;
+            for (const char of chars) {
+                try {
+                    const response = await fetch('/add_char', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `char=${encodeURIComponent(char)}&grade=${grade}`
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        successCount++;
+                        const charList = document.getElementById(`charList${grade.charAt(0).toUpperCase() + grade.slice(1)}`);
+                        const emptyState = charList.querySelector('.empty-state');
+                        if (emptyState) {
+                            emptyState.remove();
+                        }
+                        charList.appendChild(createCharElement(char, grade));
+                        
+                        // 更新全部练习按钮的显示状态
+                        const practiceBtn = document.querySelector(`#${grade} .practice-all-btn`);
+                        if (practiceBtn) {
+                            practiceBtn.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    showMessage('操作失败，请重试！', true);
+                    return;
+                }
+            }
+
+            if (successCount > 0) {
+                showMessage(`成功添加 ${successCount} 个汉字！`);
+                input.value = '';
+            } else {
+                showMessage('添加失败，请确保输入正确的汉字！', true);
+            }
+        });
+
+        async function deleteChar(char, grade, event) {
+            event.preventDefault();
+            
+            try {
+                const response = await fetch(`/delete_char/${char}/${grade}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const charList = document.getElementById(`charList${grade.charAt(0).toUpperCase() + grade.slice(1)}`);
+                    const charItem = document.querySelector(`.char-item[data-char="${char}"]`);
+                    charItem.remove();
+                    
+                    if (charList.children.length === 0) {
+                        const emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state';
+                        emptyState.textContent = '目前没有需要学习的字，请添加';
+                        charList.appendChild(emptyState);
+                    }
+                    
+                    showMessage('删除成功！');
+                } else {
+                    showMessage('删除失败！', true);
+                }
+            } catch (error) {
+                showMessage('操作失败，请重试！', true);
+            }
+        }
+
+        // 初始化时更新按钮状态
+        document.addEventListener('DOMContentLoaded', () => {
+            ['grade4', 'grade5', 'grade6'].forEach(grade => {
+                const gradeChars = {
+                    'grade4': grade4Chars,
+                    'grade5': grade5Chars,
+                    'grade6': grade6Chars
+                }[grade];
+                
+                const practiceBtn = document.querySelector(`#${grade} .practice-all-btn`);
+                if (practiceBtn) {
+                    practiceBtn.style.display = gradeChars && gradeChars.length > 0 ? 'block' : 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
